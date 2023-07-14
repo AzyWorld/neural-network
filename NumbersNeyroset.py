@@ -1,6 +1,5 @@
 import pygame, neyroset, sys
 import numpy as np
-import multiprocessing
 
 pygame.init()
 pygame.font.init()
@@ -15,10 +14,12 @@ class pixel:
     def paint(self, pos):
         if pos[0] <= self.x+20 and pos[0] >= self.x and pos[1] >= self.y and pos[1] <= self.y+20:
             if IsMouseBut[1] == 1:
-                self.color = (255, 255, 255)
+                self.color = (230, 230, 230)
             else:
                 self.color = (0, 0, 0)
-            img[int((self.y-7.5)/20), int((self.x-5)/20)] = self.color[0]/255
+        elif pos[0] <= self.x+40 and pos[0] >= self.x-20 and pos[1] >= self.y-20 and pos[1] <= self.y+40:
+            if IsMouseBut[1] == 1 and self.color != (230, 230, 230):
+                self.color = (127, 127, 127)
 
 
 WIDTH = 750
@@ -31,7 +32,7 @@ win.fill((255, 255, 255))
 
 clock = pygame.time.Clock()
 
-Processing = multiprocessing.Value('b', True)
+Processing = True
 IsMouseBut = [False, 0]
 
 
@@ -45,37 +46,29 @@ for i in range(28):
     for k in range(28):
         pixels.append(pixel(i, k))
 
-def neun():
-    global Processing
-    global sur
-    print("Start")
-    while Processing:
+while Processing:
+    win.fill((255, 255, 255))
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            Processing = False
+            sys.exit() 
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            IsMouseBut = [True, event.button]
+        if event.type == pygame.MOUSEBUTTONUP:
+            IsMouseBut = [False, 0]
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_BACKSPACE:
+                for i in pixels:
+                    i.color = (0,0,0)
+    for i in pixels:
+        if IsMouseBut[0]:
+            i.paint(event.pos)
+        pygame.draw.rect(win, i.color, (i.x, i.y, 20, 20))
+        img[int((i.y-7.5)/20), int((i.x-5)/20)] = i.color[0]/255
+    x += 1
+    if x > 300:
+        x = 0
         sur = my_font.render(str(neyroset.predict_img(img)), (255, 255, 255), (0, 0, 0))
-
-def process():
-    global Processing
-    global IsMouseBut
-    global pixels
-    global win
-    global clock
-    while Processing:
-        win.fill((255, 255, 255))
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                Processing = False
-                sys.exit() 
-            if event.type == pygame.MOUSEBUTTONDOWN:
-                IsMouseBut = [True, event.button]
-            if event.type == pygame.MOUSEBUTTONUP:
-                IsMouseBut = [False, 0]
-            if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_BACKSPACE:
-                    for i in pixels:
-                        i.color = (0,0,0)
-        for i in pixels:
-            if IsMouseBut[0]:
-                i.paint(event.pos)
-            pygame.draw.rect(win, i.color, (i.x, i.y, 20, 20))
-        win.blit(sur, (600, 10))
-        clock.tick(60)
-        pygame.display.update()
+    win.blit(sur, (600, 10))
+    clock.tick(60)
+    pygame.display.update()
